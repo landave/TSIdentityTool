@@ -164,7 +164,7 @@ static int deObfuscateKey(const char* obfuscatedIdentity_base64,
 
   size_t actualIdentitySize = STD_BUF_SIZE;
   actualIdentity = (char*)safealloc(actualIdentitySize);
-  if (base64_decode((uint8_t*)obfuscatedIdentity_base64,
+  if (base64_decode((const uint8_t*)obfuscatedIdentity_base64,
                     strlen(obfuscatedIdentity_base64),
                     (uint8_t*)actualIdentity,
                     &actualIdentitySize)
@@ -207,7 +207,7 @@ static int extractPublicKeyBase64(ecc_key* ecckey,
   int ret = 0;
 
   uint64_t ecc_public_asn1_size = STD_BUF_SIZE;
-  char *ecc_public_asn1 = safealloc(ecc_public_asn1_size);
+  char *ecc_public_asn1 = (char*)safealloc(ecc_public_asn1_size);
   if (ecc_export((uint8_t*)ecc_public_asn1,
                  &ecc_public_asn1_size,
                  PK_PUBLIC /* we export the public (!) key */,
@@ -243,7 +243,7 @@ static int parseIni(const char* filename,
     return -1;
   }
 
-  char *filecontent = safealloc(STD_BUF_SIZE + 1);
+  char *filecontent = (char*)safealloc(STD_BUF_SIZE + 1);
   size_t newLen = fread(filecontent, sizeof(char), STD_BUF_SIZE, fp);
   if (newLen == 0) {
     printf("Error reading file.\n");
@@ -256,7 +256,7 @@ static int parseIni(const char* filename,
   const char *currentpos = strstr(filecontent, IDENT_STR);
   if (currentpos == NULL) { ret = -1; goto done; }
 
-  currentpos = memchr(currentpos, '"', strlen(currentpos));
+  currentpos = (const char *)memchr(currentpos, '"', strlen(currentpos));
   if (currentpos == NULL) { ret = -1; goto done; }
 
   const char *counteridentity_startpos = currentpos + 1;
@@ -309,7 +309,7 @@ static int getIDFingerprint(const char* publickey,
     return 1;
   }
   if (sha1_process(&ctx,
-                   (uint8_t*)publickey,
+                   (const uint8_t*)publickey,
                    strlen(publickey))
       != CRYPT_OK) {
     return 1;
@@ -333,7 +333,7 @@ static uint8_t getSecurityLevel(const char* publickey, uint64_t counter) {
   // a uint64_t takes at most 20 decimal digits
   size_t hashinput_len = publickey_len + 20 + 1;
 
-  char* hashinput = safealloc(hashinput_len);
+  char* hashinput = (char*)safealloc(hashinput_len);
   size_t zerobytes = 0;
   size_t zerobits = 0;
 
@@ -397,10 +397,10 @@ static void generateKey(const char *nickname, const char *outfile, bool good) {
     goto done;
   }
 
-  ecckey = safealloc(sizeof(ecc_key));
+  ecckey = (ecc_key*)safealloc(sizeof(ecc_key));
 
-  obfuscatedKey = safealloc(STD_BUF_SIZE);
-  publickey = safealloc(STD_BUF_SIZE);
+  obfuscatedKey = (char*)safealloc(STD_BUF_SIZE);
+  publickey = (char*)safealloc(STD_BUF_SIZE);
 
   prng_state prng;
   if (register_prng(&yarrow_desc) == -1) {
@@ -440,7 +440,7 @@ static void generateKey(const char *nickname, const char *outfile, bool good) {
   while (getSecurityLevel(publickey, counter) < 8) { counter++; }
   
   long unsigned int idfingerprintlength = STD_BUF_SIZE;
-  idfingerprint = safealloc(idfingerprintlength);
+  idfingerprint = (char*)safealloc(idfingerprintlength);
   
   if (getIDFingerprint(publickey,
                       idfingerprint,
@@ -485,7 +485,7 @@ done:
 }
 
 static void readIdentity(char* filename) {
-  char* obfuscatedIdentity_base64 = safealloc(STD_BUF_SIZE);
+  char* obfuscatedIdentity_base64 = (char*)safealloc(STD_BUF_SIZE);
   uint64_t counter;
   
   if (access(filename, F_OK) != 0) {
@@ -505,14 +505,14 @@ static void readIdentity(char* filename) {
     exit(1);
   }
 
-  ecc_key *ecckey = safealloc(sizeof(ecc_key));
+  ecc_key *ecckey = (ecc_key*)safealloc(sizeof(ecc_key));
   if (deObfuscateKey(obfuscatedIdentity_base64, ecckey)) {
     printf("An error occurred while deobfuscating the identity.\n");
     exit(1);
   }
 
   uint64_t ecc_public_base64_size = STD_BUF_SIZE;
-  char *ecc_public_base64 = safealloc(ecc_public_base64_size);
+  char *ecc_public_base64 = (char*)safealloc(ecc_public_base64_size);
   
   if (extractPublicKeyBase64(ecckey,
                               ecc_public_base64,
@@ -523,7 +523,7 @@ static void readIdentity(char* filename) {
   }
   
   long unsigned int idfingerprintlength = STD_BUF_SIZE;
-  char *idfingerprint = safealloc(idfingerprintlength);
+  char *idfingerprint = (char*)safealloc(idfingerprintlength);
   
   if (getIDFingerprint(ecc_public_base64,
                       idfingerprint,
@@ -549,7 +549,7 @@ static void readIdentity(char* filename) {
   safefree(idfingerprint);
 }
 
-static void printhelp() {
+static void printhelp(void) {
   printf("Usage: TSIdentityTool COMMAND [OPTIONS]\n\n");
   printf("Available commands:\n");
   printf("read inidentity.ini\n");
