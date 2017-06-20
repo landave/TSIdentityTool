@@ -2,13 +2,14 @@
 
 TSIdentityTool is a small tool that can read out various information about TeamSpeak identities. Moreover, it is also able to generate new identities.
 
+If you are interested in increasing the security level of your identity, you might want to check out [TeamSpeakHasher](https://github.com/landave/TeamSpeakHasher).
+
 ## Build Instructions
 1. Make sure you have installed `libtomcrypt` and `libtommath`. If you are running a standard Linux distribution (Ubuntu, Fedora, etc.), you can simply install them from the default repositories. Alternatively, you can compile the libraries from source.
 2. Compile with gcc<sup>1</sup>:
 
    ```
-   gcc TSIdentityTool.c -o TSIdentityTool -l tommath -l tomcrypt
-   ```
+   gcc TSIdentityTool.c -o TSIdentityTool -l tommath -l tomcrypt```
    
 <sup>1</sup> TSIdentityTool should compile with LLVM/clang, too. However, the LLVM assembler seems to reject some of the inline assembly from the libtomcrypt/libtommath header files.
 
