@@ -35,12 +35,12 @@ There are three commands:
   ```
   
   **Warning**: TSIdentityTool currently only outputs information about the *first* identity contained in `inidentity.ini`. This allows us to keep the parsing function as simple as possible.
-* `generate nickname outidentity.ini`
+* `generate nickname outidentity.ini 8`
 
-  Generates a new identity with name `nickname` and writes it to the file `outidentity.ini`.
-* `generategood nickname outidentity.ini`
+  Generates a new identity with name `nickname`, securitylevel `8` and writes it to the file `outidentity.ini`.
+* `generategood nickname outidentity.ini 8`
 
-  Generates a new identity with name `nickname` and writes it to the file `outidentity.ini`.
+  Generates a new identity with name `nickname`, securitylevel `8` and writes it to the file `outidentity.ini`.
   This is similar to the command `generate`, but it additionally makes sure that the Base64 representation of the public key consists of at most 100 characters.
   This can come in handy when increasing the security level of the identity.
   

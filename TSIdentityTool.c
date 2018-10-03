@@ -28,6 +28,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #define USE_LTM
 #define LTM_DESC
@@ -371,7 +372,7 @@ done:
   return 8 * zerobytes + zerobits;
 }
 
-static void generateKey(const char *nickname, const char *outfile, bool good) {
+static void generateKey(const char *nickname, const char *outfile, int security, bool good) {
   ecc_key *ecckey = NULL;
   char *obfuscatedKey = NULL;
   char *publickey = NULL;
@@ -437,7 +438,7 @@ static void generateKey(const char *nickname, const char *outfile, bool good) {
   } while (good && publickeylen > 100);
   
   uint64_t counter = 0;
-  while (getSecurityLevel(publickey, counter) < 8) { counter++; }
+  while (getSecurityLevel(publickey, counter) < security) { counter++; }
   
   long unsigned int idfingerprintlength = STD_BUF_SIZE;
   idfingerprint = (char*)safealloc(idfingerprintlength);
@@ -552,15 +553,38 @@ static void readIdentity(char* filename) {
 static void printhelp(void) {
   printf("Usage: TSIdentityTool COMMAND [OPTIONS]\n\n");
   printf("Available commands:\n");
-  printf("read inidentity.ini\n");
-  printf("generate nickname outidentity.ini\n");
-  printf("generategood nickname outidentity.ini\n");
+  printf("read <inidentity.ini>\n");
+  printf("generate <nickname> <outidentity.ini> [security level]\n");
+  printf("generategood <nickname> <outidentity.ini> [security level]\n");
 }
 
 static bool safestrequal(const char *s1, const char *s2) {
   const size_t strlen1 = strlen(s1);
   const size_t strlen2 = strlen(s2);
   return strlen1==strlen2 && strncmp(s1, s2, strlen1) == 0;
+}
+
+int isNumericString(char *s){
+   int i=0, isNumeric = 1, ctDecimalPointsSeen=0;
+   
+   if (s[i] == '+' || s[i] == '-'){
+     i+=1;
+   }
+   
+   while(s[i] != '\0'){
+      if (!isdigit(s[i])){
+         if (s[i] == '.' && ctDecimalPointsSeen < 1){
+            ctDecimalPointsSeen += 1;
+         }
+         else{
+            isNumeric=0;
+            break;
+         }
+      }
+      i += 1;
+   }
+   
+   return isNumeric;
 }
 
 int main(int argc, char* argv[]) {
@@ -580,19 +604,37 @@ int main(int argc, char* argv[]) {
     }
   } else if (safestrequal(argv[1],"generate")) {
     if (argc < 3) {
-      printf("Missing argument: identity nickname.\n");
+      printf("Missing argument: <nickname> <outidentity.ini> [security level].\n");
     } else if (argc < 4) {
-      printf("Missing argument: output ini identity file.\n");
+      printf("Missing argument: <outidentity.ini> [security level].\n");
     } else {
-      generateKey(argv[2], argv[3], false);
+      int security = 8;
+	  if(argc >= 5) {
+		if(isNumericString(argv[4])) {
+		  security = atoi(argv[4]);
+		} else {
+		  printf("Invalid argument: [security level] must be a int.\n");
+		  exit(1);
+		}
+	  }
+      generateKey(argv[2], argv[3], security, false);
     }
   } else if (safestrequal(argv[1],"generategood")) {
-    if (argc < 3) {
-      printf("Missing argument: identity nickname.\n");
+     if (argc < 3) {
+      printf("Missing argument: <nickname> <outidentity.ini> [security level].\n");
     } else if (argc < 4) {
-      printf("Missing argument: output ini identity file.\n");
+      printf("Missing argument: <outidentity.ini> [security level].\n");
     } else {
-      generateKey(argv[2], argv[3], true);
+	  int security = 8;
+	  if(argc >= 5) {
+		if(isNumericString(argv[4])) {
+		  security = atoi(argv[4]);
+		} else {
+		  printf("Invalid argument: [security level] must be a int.\n");
+		  exit(1);
+		}
+	  }
+      generateKey(argv[2], argv[3], security, true);
     }
   } else {
     printhelp();
